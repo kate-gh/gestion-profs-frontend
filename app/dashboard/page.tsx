@@ -1,6 +1,18 @@
 // frontend/app/dashboard/page.tsx
 "use client";
 import { useEffect, useState } from "react";
+import { Trash, FileDown, Link } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import axios from "axios";
 import {
   Table,
@@ -14,7 +26,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, Link } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Professeur {
@@ -26,11 +37,24 @@ interface Professeur {
   matieres?: string;
   statut: string;
   photo?: string;
+  password: string;
 }
 
 export default function DashboardPage() {
   const [professeurs, setProfesseurs] = useState<Professeur[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const deleteProfesseur = async (id: number) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`http://localhost:3001/api/professeurs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfesseurs(professeurs.filter((prof) => prof.id !== id));
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchProfesseurs = async () => {
@@ -114,15 +138,61 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" variant="outline" asChild>
-                    <a
-                      href={`http://localhost:3001/api/generate-card/${prof.id}`}
-                      target="_blank"
-                    >
-                      <FileDown className="mr-2 h-4 w-4" />
-                      PDF
-                    </a>
+                <TableCell className="text-right space-x-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="destructive">
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Êtes-vous absolument sûr ?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Cette action supprimera définitivement le professeur
+                          et ne pourra pas être annulée.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProfesseur(prof.id)}
+                        >
+                          Confirmer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem("token");
+                        const response = await fetch(
+                          `http://localhost:3001/api/generate-card/${prof.id}`,
+                          {
+                            headers: { Authorization: `Bearer ${token}` },
+                          }
+                        );
+
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `carte_${prof.nom}_${prof.prenom}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                      } catch (error) {
+                        console.error("Erreur de téléchargement:", error);
+                      }
+                    }}
+                  >
+                    <FileDown className="mr-2 h-4 w-4" />
+                    PDF
                   </Button>
                 </TableCell>
               </TableRow>

@@ -1,5 +1,5 @@
 // frontend/app/dashboard/ajouter-professeur/page.tsx
-"use client"
+"use client";
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,7 @@ export default function AjouterProfesseur() {
     telephone: "",
     matieres: "",
     statut: "permanent",
+    password: "",
   });
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export default function AjouterProfesseur() {
     data.append("telephone", formData.telephone);
     data.append("statut", formData.statut);
     data.append("matieres", formData.matieres);
+    data.append("password", formData.password);
     if (photo) {
       data.append("photo", photo);
     }
@@ -98,20 +100,20 @@ export default function AjouterProfesseur() {
 
   return (
     <div className="container max-w-2xl">
-    <Card>
-      <CardHeader>
-        <CardTitle>Ajouter un Professeur</CardTitle>
-        <CardDescription>
-          Renseignez les informations du nouveau professeur
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-         <form onSubmit={handleSubmit} className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Ajouter un Professeur</CardTitle>
+          <CardDescription>
+            Renseignez les informations du nouveau professeur
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex items-center justify-center gap-4">
               <Avatar className="h-24 w-24">
                 {photoPreview && <AvatarImage src={photoPreview} />}
@@ -163,6 +165,17 @@ export default function AjouterProfesseur() {
                 onChange={handleChange}
               />
             </div>
+            <div>
+              <label className="block mb-2">Mot de passe</label>
+              <input
+                type="password"
+                name="password"
+                required
+                className="w-full p-2 border rounded"
+                value={formData.password} // Ajoute cette ligne
+                onChange={handleChange}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -206,14 +219,23 @@ export default function AjouterProfesseur() {
                 onChange={handleChange}
               />
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.matieres.split(',').map((m, i) => (
-                  m.trim() && <Badge key={i} variant="secondary">{m.trim()}</Badge>
-                ))}
+                {formData.matieres.split(",").map(
+                  (m, i) =>
+                    m.trim() && (
+                      <Badge key={i} variant="secondary">
+                        {m.trim()}
+                      </Badge>
+                    )
+                )}
               </div>
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={() => router.back()}>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => router.back()}
+              >
                 Annuler
               </Button>
               <Button type="submit">Ajouter le professeur</Button>
