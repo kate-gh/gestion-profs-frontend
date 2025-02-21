@@ -58,8 +58,12 @@ export default function EditProfile() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!file.type.startsWith("image/")) {
+        alert("Veuillez sélectionner une image valide");
+        return;
+      }
       setPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file)); // Ajouter cette ligne
+      setPhotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -68,14 +72,21 @@ export default function EditProfile() {
     e.preventDefault();
     const token = localStorage.getItem("token");
     const data = new FormData();
+
+    // Ajouter tous les champs existants
     data.append("nom", formData.nom);
     data.append("prenom", formData.prenom);
     data.append("email", formData.email);
-    data.append("telephone", formData.telephone);
+    data.append("telephone", formData.telephone || "");
     data.append("statut", formData.statut);
     data.append("matieres", formData.matieres);
+
+    // Toujours envoyer le nom de la photo existante
+    data.append("photo", professor.photo || ""); // Nouvelle ligne
+
+    // Ajouter la nouvelle photo si elle existe
     if (photo) {
-      data.append("photo", photo);
+      data.append("newPhoto", photo); // Renommer le champ pour le backend
     }
 
     try {
@@ -85,7 +96,7 @@ export default function EditProfile() {
           "Content-Type": "multipart/form-data",
         },
       });
-      router.push("/profile"); // Redirect to profile page after update
+      router.push("/profile");
     } catch (error) {
       console.error("Error updating profile:", error);
     }
